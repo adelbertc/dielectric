@@ -16,7 +16,8 @@ libraryDependencies ++= Seq(
   "org.scalaz"        %% "scalaz-concurrent"  % scalazVersion,
   "org.scalaz"        %% "scalaz-core"        % scalazVersion,
   "org.scalaz"        %% "scalaz-effect"      % scalazVersion,
-  "org.apache.spark"  %% "spark-core"         % "1.3.0"
+  "org.apache.spark"  %% "spark-core"         % "1.3.0",
+  "org.spire-math"    %% "spire"              % "0.9.0"
 )
 
 scalacOptions ++= Seq(
