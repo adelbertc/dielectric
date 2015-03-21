@@ -23,6 +23,9 @@ class RDDOps[A](val rdd: RDD[A]) extends AnyVal {
     rdd.aggregate(B.id)(seqOp, combOp)
   }
 
+  def sequence[G[_] : Applicative, B : ClassTag](implicit ev: A =:= G[B], GRDD: ClassTag[G[RDD[B]]]): G[RDD[B]] =
+    traverse(ev.apply)
+
   def traverse[G[_], B : ClassTag](f: A => G[B])(implicit G: Applicative[G], GRDD: ClassTag[G[RDD[B]]]): G[RDD[B]] = {
     def seqOp(u: G[RDD[B]], t: A): G[RDD[B]] =
       G.apply2(u, G.map(f(t))(b => rdd.sparkContext.parallelize(List(b))))(_ ++ _)
