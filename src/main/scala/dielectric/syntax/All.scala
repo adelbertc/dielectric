@@ -1,4 +1,5 @@
 package dielectric.syntax
 
 trait AllSyntax
-  extends SparkContextSyntax
+  extends RDDSyntax
+  with    SparkContextSyntax
