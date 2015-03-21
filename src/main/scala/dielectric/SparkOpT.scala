@@ -29,6 +29,9 @@ object SparkOpT extends SparkOpTInstances {
     new SparkOpT[F, S, A] {
       def run(sc: SparkContext, state: S): F[(S, A)] = f(sc, state)
     }
+
+  def kleisli[F[_], A](f: SparkContext => F[A])(implicit F: Functor[F]): SparkOpT[F, Unit, A] =
+    apply((sc, _) => F.map(f(sc))(a => ((), a)))
 }
 
 sealed abstract class SparkOpTInstances {
