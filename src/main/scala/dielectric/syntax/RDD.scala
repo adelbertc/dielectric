@@ -58,53 +58,62 @@ class RDDPairOps[K, V](val rdd: RDD[(K, V)]) extends AnyVal {
                                 implicit K: ClassTag[K], V0: ClassTag[V], V1: Semigroup[V]): RDD[(K, V)] =
     rdd.reduceByKey(V1.op _, numPartitions)
 
-  def withZero: RDDPairWithDefaultOps[K, V] = new RDDPairWithDefaultOps(rdd)
+  def withZero: RDDPairWithDefault[K, V] = RDDPairWithDefault(rdd)
 }
 
-class RDDPairWithDefaultOps[K, V] private[dielectric](val rdd: RDD[(K, V)]) extends AnyVal {
+class RDDPairWithDefault[K, V] private[dielectric](val rdd: RDD[(K, V)]) extends AnyVal {
   private def flattenBoth[W](rdd: RDD[(K, (Option[V], Option[W]))])(
-                             implicit K: ClassTag[K], V: Monoid[V], W: Monoid[W]): RDD[(K, (V, W))] =
-    rdd.mapValues { case (l, r) => (l.getOrElse(V.id), r.getOrElse(W.id)) }
+                             implicit K: ClassTag[K], V: Monoid[V], W: Monoid[W]): RDDPairWithDefault[K, (V, W)] =
+    RDDPairWithDefault(rdd.mapValues { case (l, r) => (l.getOrElse(V.id), r.getOrElse(W.id)) })
 
-  private def flattenLeft[W](rdd: RDD[(K, (Option[V], W))])(implicit K: ClassTag[K], V: Monoid[V]): RDD[(K, (V, W))] =
-    rdd.mapValues { case (l, r) => (l.getOrElse(V.id), r) }
+  private def flattenLeft[W](rdd: RDD[(K, (Option[V], W))])(
+                             implicit K: ClassTag[K], V: Monoid[V]): RDDPairWithDefault[K, (V, W)] =
+    RDDPairWithDefault(rdd.mapValues { case (l, r) => (l.getOrElse(V.id), r) })
 
-  private def flattenRight[W](rdd: RDD[(K, (V, Option[W]))])(implicit K: ClassTag[K], W: Monoid[W]): RDD[(K, (V, W))] =
-    rdd.mapValues { case (l, r) => (l, r.getOrElse(W.id)) }
+  private def flattenRight[W](rdd: RDD[(K, (V, Option[W]))])(
+                              implicit K: ClassTag[K], W: Monoid[W]): RDDPairWithDefault[K, (V, W)] =
+    RDDPairWithDefault(rdd.mapValues { case (l, r) => (l, r.getOrElse(W.id)) })
 
-  def fullOuterJoin[W](other: RDDPairWithDefaultOps[K, W])(
-                       implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V], W: Monoid[W]): RDD[(K, (V, W))] =
+  def fullOuterJoin[W](other: RDDPairWithDefault[K, W])(
+                       implicit K: ClassTag[K], V0: ClassTag[V],
+                       V1: Monoid[V], W: Monoid[W]): RDDPairWithDefault[K, (V, W)] =
     flattenBoth(rdd.fullOuterJoin(other.rdd))
 
-  def fullOuterJoinWithPartitioner[W](other: RDDPairWithDefaultOps[K, W], partitioner: Partitioner)(
-                                      implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V], W: Monoid[W]): RDD[(K, (V, W))] =
+  def fullOuterJoinWithPartitioner[W](other: RDDPairWithDefault[K, W], partitioner: Partitioner)(
+                                      implicit K: ClassTag[K], V0: ClassTag[V],
+                                      V1: Monoid[V], W: Monoid[W]): RDDPairWithDefault[K, (V, W)] =
     flattenBoth(rdd.fullOuterJoin(other.rdd, partitioner))
 
-  def fullOuterJoinWithPartitions[W](other: RDDPairWithDefaultOps[K, W], numPartitions: Int)(
-                                     implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V], W: Monoid[W]): RDD[(K, (V, W))] =
+  def fullOuterJoinWithPartitions[W](other: RDDPairWithDefault[K, W], numPartitions: Int)(
+                                     implicit K: ClassTag[K], V0: ClassTag[V],
+                                     V1: Monoid[V], W: Monoid[W]): RDDPairWithDefault[K, (V, W)] =
     flattenBoth(rdd.fullOuterJoin(other.rdd, numPartitions))
 
-  def leftOuterJoin[W](other: RDDPairWithDefaultOps[K, W])(
-                       implicit K: ClassTag[K], V: ClassTag[V], W: Monoid[W]): RDD[(K, (V, W))] =
+  def leftOuterJoin[W](other: RDDPairWithDefault[K, W])(
+                       implicit K: ClassTag[K], V: ClassTag[V], W: Monoid[W]): RDDPairWithDefault[K, (V, W)] =
     flattenRight(rdd.leftOuterJoin(other.rdd))
 
-  def leftOuterJoinWithPartitioner[W](other: RDDPairWithDefaultOps[K, W], partitioner: Partitioner)(
-                                      implicit K: ClassTag[K], V: ClassTag[V], W: Monoid[W]): RDD[(K, (V, W))] =
+  def leftOuterJoinWithPartitioner[W](other: RDDPairWithDefault[K, W], partitioner: Partitioner)(
+                                      implicit K: ClassTag[K], V: ClassTag[V],W: Monoid[W]): RDDPairWithDefault[K, (V, W)] =
     flattenRight(rdd.leftOuterJoin(other.rdd, partitioner))
 
-  def leftOuterJoinWithPartitions[W](other: RDDPairWithDefaultOps[K, W], numPartitions: Int)(
-                                     implicit K: ClassTag[K], V: ClassTag[V], W: Monoid[W]): RDD[(K, (V, W))] =
+  def leftOuterJoinWithPartitions[W](other: RDDPairWithDefault[K, W], numPartitions: Int)(
+                                     implicit K: ClassTag[K], V: ClassTag[V], W: Monoid[W]): RDDPairWithDefault[K, (V, W)] =
     flattenRight(rdd.leftOuterJoin(other.rdd, numPartitions))
 
-  def rightOuterJoin[W](other: RDDPairWithDefaultOps[K, W])(
-                        implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V]): RDD[(K, (V, W))] =
+  def rightOuterJoin[W](other: RDDPairWithDefault[K, W])(
+                        implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V]): RDDPairWithDefault[K, (V, W)] =
     flattenLeft(rdd.rightOuterJoin(other.rdd))
 
-  def rightOuterJoinWithPartitioner[W](other: RDDPairWithDefaultOps[K, W], partitioner: Partitioner)(
-                                       implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V]): RDD[(K, (V, W))] =
+  def rightOuterJoinWithPartitioner[W](other: RDDPairWithDefault[K, W], partitioner: Partitioner)(
+                                       implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V]): RDDPairWithDefault[K, (V, W)] =
     flattenLeft(rdd.rightOuterJoin(other.rdd, partitioner))
 
-  def rightOuterJoinWithPartitions[W](other: RDDPairWithDefaultOps[K, W], numPartitions: Int)(
-                                      implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V]): RDD[(K, (V, W))] =
+  def rightOuterJoinWithPartitions[W](other: RDDPairWithDefault[K, W], numPartitions: Int)(
+                                      implicit K: ClassTag[K], V0: ClassTag[V], V1: Monoid[V]): RDDPairWithDefault[K, (V, W)] =
     flattenLeft(rdd.rightOuterJoin(other.rdd, numPartitions))
+}
+
+object RDDPairWithDefault {
+  def apply[K, V](rdd: RDD[(K, V)]): RDDPairWithDefault[K, V] = new RDDPairWithDefault(rdd)
 }
