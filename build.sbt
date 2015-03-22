@@ -10,13 +10,16 @@ resolvers += "bintray/non" at "http://dl.bintray.com/non/maven"
 
 val scalazVersion = "7.1.0"
 
+val sparkVersion = "1.3.0"
+
 libraryDependencies ++= Seq(
   compilerPlugin("org.spire-math" %% "kind-projector" % "0.5.2"),
 
   "org.scalaz"        %% "scalaz-concurrent"  % scalazVersion,
   "org.scalaz"        %% "scalaz-core"        % scalazVersion,
   "org.scalaz"        %% "scalaz-effect"      % scalazVersion,
-  "org.apache.spark"  %% "spark-core"         % "1.3.0",
+  "org.apache.spark"  %% "spark-core"         % sparkVersion,
+  "org.apache.spark"  %% "spark-streaming"    % sparkVersion,
   "org.spire-math"    %% "spire"              % "0.9.0"
 )
 
