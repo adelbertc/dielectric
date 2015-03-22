@@ -1,4 +1,5 @@
 package dielectric.spark
 
 trait AllInstances
-  extends RDDInstances
+  extends DStreamInstances
+  with    RDDInstances
