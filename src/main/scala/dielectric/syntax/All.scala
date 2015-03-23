@@ -1,6 +1,7 @@
 package dielectric.syntax
 
 trait AllSyntax
-  extends DStreamSyntax
+  extends DataFrameSyntax
+  with    DStreamSyntax
   with    RDDSyntax
   with    SparkContextSyntax
